@@ -7,9 +7,11 @@ from typing import Any
 
 from apify_client import ApifyClient
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from pipelines.entity_extractor import extract_tickers, extract_entities
-from stream.event_bus import EventBus
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+from data.pipelines.entity_extractor import extract_tickers, extract_entities
+from data.stream.event_bus import EventBus
+from agents.models import NarrativeEvent, SourceType, Entity
+from agents.graph.workflow import run_analysis
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -59,11 +61,40 @@ def run_pipeline() -> list[dict[str, Any]]:
 
     flushed = bus.flush()
     bus.close()
-    return flushed
+    
+    # E2E Agent Graph Execution
+    narrative_events = []
+    for e in deduped:
+        try:
+            ne = NarrativeEvent(
+                id=e.get("id", ""),
+                source=SourceType(e.get("source", "news")),
+                source_actor=e.get("source_actor", "apify"),
+                title=e.get("title", ""),
+                body=e.get("body", ""),
+                url=e.get("url", ""),
+                author=e.get("author"),
+                published_at=e.get("published_at", datetime.now(timezone.utc).isoformat()),
+                collected_at=e.get("collected_at", datetime.now(timezone.utc).isoformat()),
+                ticker_mentions=e.get("ticker_mentions", []),
+                entities=[Entity(**ent) for ent in e.get("entities", [])],
+                metadata=e.get("metadata", {})
+            )
+            narrative_events.append(ne)
+        except Exception as err:
+            logger.warning(f"Skipping event due to parsing error: {err}")
+
+    signal = None
+    if narrative_events:
+        logger.info("Executing E2E agent graph on %d events...", len(narrative_events))
+        signal = run_analysis(narrative_events)
+        logger.info("Generated Signal: %s", signal)
+
+    return flushed, signal
 
 
 def main() -> None:
-    events = run_pipeline()
+    events, signal = run_pipeline()
     print(f"\n{'='*60}")
     print(f"Pipeline complete: {len(events)} events emitted")
     print(f"{'='*60}")
@@ -75,6 +106,11 @@ def main() -> None:
     if len(with_tickers) > 5:
         print(f"  ... and {len(with_tickers) - 5} more with tickers")
 
+    if signal:
+        print(f"\n{'='*60}")
+        print(f"Final E2E Signal Generated: {signal.direction.value} {signal.ticker} @ {signal.confidence:.0%}")
+        print(f"Arbiter Ruling: {signal.debate_summary.arbiter_ruling if signal.debate_summary else 'N/A'}")
+        print(f"{'='*60}")
 
 if __name__ == "__main__":
     main()

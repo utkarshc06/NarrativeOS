@@ -1,5 +1,16 @@
 from __future__ import annotations
 
+import os
+import logging
+
+try:
+    from openai import OpenAI
+    openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
+except ImportError:
+    openai_client = None
+
+logger = logging.getLogger(__name__)
+
 from agents.models import (
     DebatePosition,
     DebateRound,
@@ -25,25 +36,41 @@ class BullAgent:
         cluster = next((c for c in clusters if ticker in c.label), None)
         momentum = cluster.momentum_score if cluster else 0.5
 
-        argument_parts = [f"Bull Case for {ticker} (Round {round_number}):"]
+        if openai_client and os.environ.get("OPENAI_API_KEY"):
+            try:
+                cluster_info = f"Topic: {cluster.label}, Momentum: {cluster.momentum_score}" if cluster else "General Market"
+                prompt = f"You are a Bullish Financial Agent. Build a strong bull case for {ticker}. Context: {cluster_info}, Sentiment Polarity: {sentiment.polarity:.2f}. Round {round_number}."
+                if counter_arguments:
+                    prompt += f"\nRebut these bear arguments: {counter_arguments}"
+                
+                response = openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a professional financial debate agent arguing the bull case. Be concise and data-driven."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7
+                )
+                argument = response.choices[0].message.content
+                confidence = min(1.0, (momentum * 0.4 + max(0, sentiment.polarity) * 0.3 + (1 - sentiment.uncertainty) * 0.3))
+                return DebatePosition(agent_role="bull", argument=argument, evidence=[f"Narrative momentum: {momentum:.0%}", "LLM Analysis"], confidence=round(confidence, 4))
+            except Exception as e:
+                logger.error(f"OpenAI call failed in BullAgent: {e}")
 
+        # Fallback to heuristics
+        argument_parts = [f"Bull Case for {ticker} (Round {round_number}):"]
         if momentum > 0.6:
             argument_parts.append(f"Strong narrative momentum detected at {momentum:.0%}, indicating growing market interest.")
         elif momentum > 0.3:
             argument_parts.append(f"Moderate narrative momentum at {momentum:.0%}, potential for acceleration.")
-
         if sentiment.polarity > 0.2:
             argument_parts.append(f"Positive sentiment polarity at {sentiment.polarity:.2f} supports bullish outlook.")
-
         if sentiment.emotional_intensity < 0.7:
             argument_parts.append("Emotional intensity is controlled, suggesting rational optimism rather than euphoria.")
-
         if counter_arguments:
             for arg in counter_arguments:
                 argument_parts.append(f"Addressing concern: {arg}")
-
         confidence = min(1.0, (momentum * 0.4 + max(0, sentiment.polarity) * 0.3 + (1 - sentiment.uncertainty) * 0.3))
-
         return DebatePosition(
             agent_role="bull",
             argument="\n".join(argument_parts),
@@ -67,26 +94,42 @@ class BearAgent:
         cluster = next((c for c in clusters if ticker in c.label), None)
         momentum = cluster.momentum_score if cluster else 0.5
 
-        argument_parts = [f"Bear Case for {ticker} (Round {round_number}):"]
+        if openai_client and os.environ.get("OPENAI_API_KEY"):
+            try:
+                cluster_info = f"Topic: {cluster.label}, Momentum: {cluster.momentum_score}" if cluster else "General Market"
+                prompt = f"You are a Bearish Financial Agent. Build a strong bear case for {ticker}. Context: {cluster_info}, Sentiment Polarity: {sentiment.polarity:.2f}. Round {round_number}."
+                if counter_arguments:
+                    prompt += f"\nRebut these bull arguments: {counter_arguments}"
+                
+                response = openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a professional financial debate agent arguing the bear case. Be concise and highlight risks."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7
+                )
+                argument = response.choices[0].message.content
+                confidence = min(1.0, (momentum * 0.2 + max(0, -sentiment.polarity) * 0.4 + sentiment.instability_score * 0.4))
+                return DebatePosition(agent_role="bear", argument=argument, evidence=[f"Narrative instability: {sentiment.instability_score:.0%}", "LLM Analysis"], confidence=round(confidence, 4))
+            except Exception as e:
+                logger.error(f"OpenAI call failed in BearAgent: {e}")
 
+        # Fallback to heuristics
+        argument_parts = [f"Bear Case for {ticker} (Round {round_number}):"]
         if sentiment.instability_score > 0.5:
             argument_parts.append(f"High narrative instability at {sentiment.instability_score:.0%} — sentiment could reverse sharply.")
         else:
             argument_parts.append("Market complacency may be underestimating downside risks.")
-
         if momentum > 0.7:
             argument_parts.append("Excessive narrative momentum suggests crowded positioning and potential for mean reversion.")
-
         if sentiment.emotional_intensity > 0.6:
             argument_parts.append(f"Elevated emotional intensity at {sentiment.emotional_intensity:.0%} is a warning sign of irrational exuberance.")
-
         if sentiment.uncertainty > 0.4:
             argument_parts.append(f"Uncertainty level at {sentiment.uncertainty:.0%} creates vulnerability to negative surprises.")
-
         if counter_arguments:
             for arg in counter_arguments:
                 argument_parts.append(f"Rebuttal to: {arg}")
-
         confidence = min(1.0, (momentum * 0.2 + max(0, -sentiment.polarity) * 0.4 + sentiment.instability_score * 0.4))
 
         return DebatePosition(
@@ -117,6 +160,28 @@ class ArbiterAgent:
         bull_score = bull.confidence
         bear_score = bear.confidence
 
+        if openai_client and os.environ.get("OPENAI_API_KEY"):
+            try:
+                prompt = f"You are the Arbiter. Evaluate the debate for {ticker}.\nBull Case:\n{bull.argument}\n\nBear Case:\n{bear.argument}\n\nSentiment Polarity: {sentiment.polarity:.2f}\nProvide a concise ruling on which side prevails and why."
+                response = openai_client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a professional financial debate arbiter. Synthesize the arguments and provide a clear, objective ruling."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.4
+                )
+                ruling = response.choices[0].message.content
+                return DebateSummary(
+                    bull_case=bull.argument,
+                    bear_case=bear.argument,
+                    arbiter_ruling=ruling,
+                    debate_rounds=len(rounds),
+                )
+            except Exception as e:
+                logger.error(f"OpenAI call failed in ArbiterAgent: {e}")
+
+        # Fallback to heuristics
         if bull_score > bear_score + 0.1:
             ruling = f"Bull case prevails — narrative momentum and sentiment support continued upside."
             ruling_detail = f"Bull confidence {bull_score:.0%} vs Bear confidence {bear_score:.0%}. "

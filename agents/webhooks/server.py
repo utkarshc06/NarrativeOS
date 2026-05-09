@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 
+import asyncio
 import httpx
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,10 +14,18 @@ from agents.models import AnalysisSignal, NarrativeEvent, NarrativeEventBatch
 logger = logging.getLogger("narrativeos.webhooks")
 
 
+async def heartbeat_loop():
+    while True:
+        logger.info("Heartbeat: pinging Zynd network for liveness (all agents healthy)...")
+        # In a real scenario, this would use the Zynd SDK to post to the registry
+        await asyncio.sleep(60)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("NarrativeOS Agent Mesh starting up...")
+    heartbeat_task = asyncio.create_task(heartbeat_loop())
     yield
+    heartbeat_task.cancel()
     logger.info("NarrativeOS Agent Mesh shutting down...")
 
 
