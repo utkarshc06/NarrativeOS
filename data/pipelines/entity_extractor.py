@@ -1,7 +1,6 @@
 import re
 from typing import NamedTuple
 
-
 KNOWN_COMPANIES: dict[str, str] = {
     "NVDA": "NVIDIA",
     "AMD": "Advanced Micro Devices",

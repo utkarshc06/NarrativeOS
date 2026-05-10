@@ -1,18 +1,14 @@
 import os
-import sys
 import re
-import hashlib
+import sys
 from datetime import datetime, timezone
-from typing import Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from apify import Actor
-from src.normalize import normalize_reddit_post
-
 import feedparser
 import httpx
-
+from apify import Actor
+from src.normalize import normalize_reddit_post
 
 KNOWN_COMPANIES: dict[str, str] = {
     "NVDA": "NVIDIA", "AMD": "Advanced Micro Devices", "AAPL": "Apple",

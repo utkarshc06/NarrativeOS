@@ -2,7 +2,7 @@ import hashlib
 from datetime import datetime, timezone
 from typing import Any
 
-from data.pipelines.entity_extractor import extract_tickers, extract_entities
+from data.pipelines.entity_extractor import extract_entities, extract_tickers
 
 
 def build_event_id(source: str, url: str) -> str:
@@ -58,7 +58,6 @@ def normalize_article(article: dict[str, Any]) -> dict[str, Any]:
 
 
 def normalize_sec_filing(filing: dict[str, Any]) -> dict[str, Any]:
-    text = f"{filing.get('company_name', '')} {filing.get('description', '')} {filing.get('form_type', '')}"
     return {
         "id": build_event_id("sec_filing", filing.get("url", "")),
         "source": "sec_filing",

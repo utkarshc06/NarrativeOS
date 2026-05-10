@@ -2,14 +2,13 @@
 Quick test for the data pipeline — entity extraction + normalization.
 Run: python -m data.pipelines.test_pipeline
 """
-import json
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from data.pipelines.entity_extractor import extract_tickers, extract_entities, KNOWN_COMPANIES
-from data.pipelines.normalize import normalize_reddit_post, normalize_article, normalize_sec_filing
+from data.pipelines.entity_extractor import KNOWN_COMPANIES, extract_entities, extract_tickers
+from data.pipelines.normalize import normalize_article, normalize_reddit_post, normalize_sec_filing
 
 
 def test_ticker_extraction():

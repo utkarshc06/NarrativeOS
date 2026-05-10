@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import sys
@@ -8,10 +7,10 @@ from typing import Any
 from apify_client import ApifyClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-from data.pipelines.entity_extractor import extract_tickers, extract_entities
-from data.stream.event_bus import EventBus
-from agents.models import NarrativeEvent, SourceType, Entity
 from agents.graph.workflow import run_analysis
+from agents.models import Entity, NarrativeEvent, SourceType
+from data.pipelines.entity_extractor import extract_entities, extract_tickers
+from data.stream.event_bus import EventBus
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -61,7 +60,7 @@ def run_pipeline() -> list[dict[str, Any]]:
 
     flushed = bus.flush()
     bus.close()
-    
+
     # E2E Agent Graph Execution
     narrative_events = []
     for e in deduped:

@@ -3,7 +3,6 @@ import re
 from datetime import datetime, timezone
 from typing import Any
 
-
 KNOWN_COMPANIES: dict[str, str] = {
     "NVDA": "NVIDIA", "AMD": "Advanced Micro Devices", "AAPL": "Apple",
     "MSFT": "Microsoft", "GOOGL": "Alphabet (Google)", "GOOG": "Alphabet (Google)",
@@ -32,7 +31,6 @@ def build_event_id(source: str, url: str) -> str:
 
 
 def normalize_sec_filing(filing: dict[str, Any]) -> dict[str, Any]:
-    text = f"{filing.get('company_name', '')} {filing.get('description', '')} {filing.get('form_type', '')}"
     return {
         "id": build_event_id("sec_filing", filing.get("url", "")),
         "source": "sec_filing",

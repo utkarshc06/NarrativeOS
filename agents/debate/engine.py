@@ -1,15 +1,7 @@
 from __future__ import annotations
 
-import os
 import logging
-
-try:
-    from openai import OpenAI
-    openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
-except ImportError:
-    openai_client = None
-
-logger = logging.getLogger(__name__)
+import os
 
 from agents.models import (
     DebatePosition,
@@ -18,6 +10,14 @@ from agents.models import (
     SentimentVector,
     TopicCluster,
 )
+
+try:
+    from openai import OpenAI
+    openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
+except ImportError:
+    openai_client = None
+
+logger = logging.getLogger(__name__)
 
 
 class BullAgent:
@@ -41,7 +41,7 @@ class BullAgent:
                 prompt = f"You are a Bullish Financial Agent. Build a strong bull case for {ticker}. Context: {cluster_info}, Sentiment Polarity: {sentiment.polarity:.2f}. Round {round_number}."
                 if counter_arguments:
                     prompt += f"\nRebut these bear arguments: {counter_arguments}"
-                
+
                 response = openai_client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[
@@ -99,7 +99,7 @@ class BearAgent:
                 prompt = f"You are a Bearish Financial Agent. Build a strong bear case for {ticker}. Context: {cluster_info}, Sentiment Polarity: {sentiment.polarity:.2f}. Round {round_number}."
                 if counter_arguments:
                     prompt += f"\nRebut these bull arguments: {counter_arguments}"
-                
+
                 response = openai_client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[

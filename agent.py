@@ -11,7 +11,6 @@ import os
 import sys
 
 from dotenv import load_dotenv
-
 from zyndai_agent import AgentConfig, ZyndAIAgent, resolve_registry_url
 from zyndai_agent.a2a.server import HandlerInput, TaskHandle
 
@@ -74,7 +73,7 @@ if __name__ == "__main__":
     zynd_agent.set_custom_agent(run_analysis_pipeline)
     zynd_agent.start()
 
-    print(f"\nNarrativeOS Cognitive Mesh is running on Zynd")
+    print("\nNarrativeOS Cognitive Mesh is running on Zynd")
     print(f"FQAN:    {agent_config.registry_url}/0xYuvi/narrativeos-cognitive")
     print(f"A2A URL: {zynd_agent.a2a_url}")
     print(f"Card:    {zynd_agent.card_url}")

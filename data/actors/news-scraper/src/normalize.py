@@ -3,7 +3,6 @@ import re
 from datetime import datetime, timezone
 from typing import Any
 
-
 KNOWN_COMPANIES: dict[str, str] = {
     "NVDA": "NVIDIA", "AMD": "Advanced Micro Devices", "AAPL": "Apple",
     "MSFT": "Microsoft", "GOOGL": "Alphabet (Google)", "GOOG": "Alphabet (Google)",

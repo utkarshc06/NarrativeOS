@@ -1,13 +1,13 @@
 import os
 import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from apify import Actor
-from src.normalize import normalize_article
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import feedparser
 import httpx
+from apify import Actor
 from bs4 import BeautifulSoup
+from src.normalize import normalize_article
 
 
 async def main() -> None:

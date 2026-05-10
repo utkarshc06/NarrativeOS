@@ -1,13 +1,13 @@
 import os
 import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from apify import Actor
-from src.normalize import normalize_sec_filing
 
 import httpx
+from apify import Actor
 from bs4 import BeautifulSoup
-import re
+from src.normalize import normalize_sec_filing
 
 CIK_MAP: dict[str, str] = {
     "NVDA": "1045810",
