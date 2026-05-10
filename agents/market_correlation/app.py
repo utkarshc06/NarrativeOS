@@ -1,10 +1,10 @@
 """Agent 4: Market Correlation Agent — maps narratives to assets, sectors, and macro relationships."""
 
 import re
-from fastapi import FastAPI
-from pydantic import BaseModel
 
-from agents.schemas import NarrativeEvent, CorrelationResult, MarketCorrelationOutput
+from fastapi import FastAPI
+
+from agents.schemas import CorrelationResult, MarketCorrelationOutput, NarrativeEvent
 
 app = FastAPI(title="Market Correlation Agent", version="0.1.0")
 

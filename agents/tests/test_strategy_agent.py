@@ -1,6 +1,7 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
-from agents.strategy_agent.app import app, determine_direction, compute_confidence, compute_position_size
+
+from agents.strategy_agent.app import app, compute_confidence, compute_position_size, determine_direction
 
 
 @pytest.mark.anyio

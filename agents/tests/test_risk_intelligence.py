@@ -1,6 +1,7 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
-from agents.risk_intelligence.app import app, compute_risk_score, extract_risk_factors, detect_anomalies
+
+from agents.risk_intelligence.app import app, compute_risk_score, detect_anomalies, extract_risk_factors
 
 
 @pytest.mark.anyio

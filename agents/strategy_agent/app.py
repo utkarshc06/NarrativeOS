@@ -1,8 +1,5 @@
 """Agent 7: Strategy Agent — generates adaptive trading signals from validated narratives."""
 
-import math
-import random
-from datetime import datetime
 from fastapi import FastAPI
 
 app = FastAPI(title="Strategy Agent", version="0.1.0")
@@ -82,7 +79,6 @@ def health():
 def formulate(payload: dict):
     risk_assessment = payload.get("risk_assessment", {})
     debate = payload.get("debate", {})
-    config = payload.get("config", {})
 
     risk_score = float(risk_assessment.get("risk_score", 0.5))
     ticker = debate.get("ticker") or risk_assessment.get("ticker") or "UNKNOWN"

@@ -1,8 +1,7 @@
 """Agent 6: Risk Intelligence Agent — evaluates systemic uncertainty and signal reliability."""
 
 import re
-import math
-from datetime import datetime
+
 from fastapi import FastAPI
 
 app = FastAPI(title="Risk Intelligence Agent", version="0.1.0")

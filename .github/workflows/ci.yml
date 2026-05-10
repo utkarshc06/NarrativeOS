@@ -61,7 +61,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check deploy secrets
+        id: check-secrets
+        run: |
+          if [ -n "$DEPLOY_HOST" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+
       - name: Deploy via SSH
+        if: steps.check-secrets.outputs.ready == 'true'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -75,6 +87,7 @@ jobs:
             docker system prune -f
 
       - name: Notify Slack on Deploy
+        if: steps.check-secrets.outputs.ready == 'true'
         uses: slackapi/slack-github-action@v1.26.0
         with:
           payload: |

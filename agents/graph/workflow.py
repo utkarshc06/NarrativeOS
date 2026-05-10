@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Literal
 
 from agents.consensus.aggregator import SignalAggregator
 from agents.debate.engine import DebateEngine
-from agents.models import AgentState, AnalysisSignal, NarrativeEvent, SentimentVector, TopicCluster
+from agents.models import AgentState, AnalysisSignal, NarrativeEvent, SentimentVector
 from agents.narrative_intelligence import NarrativeIntelligenceAgent
 from agents.sentiment import SentimentReasoningAgent
 
 try:
     from langgraph.graph import END, StateGraph
-    from langgraph.graph.message import add_messages
     LANGGRAPH_AVAILABLE = True
 except ImportError:
     LANGGRAPH_AVAILABLE = False

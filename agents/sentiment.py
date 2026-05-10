@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import math
-
 from agents.models import NarrativeEvent, SentimentVector
 
 

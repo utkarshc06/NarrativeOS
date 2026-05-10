@@ -1,5 +1,6 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
+
 from agents.market_correlation.app import app
 
 
